@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+  namespace: vllm
+data:
+  MODEL_NAME: "Qwen/Qwen2.5-1.5B-Instruct"
+  # Параметры для CPU-инференса
+  VLLM_CPU_KVCACHE_SPACE: "4"
+  VLLM_CPU_OMP_THREADS_BIND: "0-3"

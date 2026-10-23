@@ -1,0 +1,22 @@
+# Используем официальный образ vLLM с поддержкой CPU как базу
+# (он содержит все необходимые библиотеки для сборки)
+FROM vllm/vllm-openai-cpu:latest
+
+# Переключаемся на root для установки/настройки
+USER root
+
+# (Опционально) Установка TCMalloc для лучшей производительности памяти на CPU
+RUN apt-get update && apt-get install -y libtcmalloc-minimal4 && rm -rf /var/lib/apt/lists/*
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4:$LD_PRELOAD
+
+# Создаём непривилегированного пользователя
+RUN useradd -m -s /bin/bash vllmuser
+
+# Создаём директорию для кэша модели и даём права пользователю
+RUN mkdir -p /model-cache && chown -R vllmuser:vllmuser /model-cache
+
+# Переключаемся на непривилегированного пользователя (Rootless)
+USER vllmuser
+
+# Устанавливаем рабочую директорию
+WORKDIR /home/vllmuser

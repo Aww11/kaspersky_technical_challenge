@@ -1,0 +1,5 @@
+[client]
+user=kuma_user
+password=kuma_pass
+host=kuma-db
+port=3306

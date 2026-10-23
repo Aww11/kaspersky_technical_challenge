@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-deployment
+  namespace: vllm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      initContainers:
+        - name: model-downloader
+          image: my-model-downloader:latest  # Соберем этот образ отдельно
+          imagePullPolicy: Never
+          env:
+            - name: MODEL_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vllm-config
+                  key: MODEL_NAME
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vllm-secrets
+                  key: HF_TOKEN
+          volumeMounts:
+            - name: model-cache
+              mountPath: /model-cache
+
+      containers:
+        - name: vllm
+          image: my-vllm-cpu:latest
+          imagePullPolicy: Never
+          command:
+            - python3
+            - -m
+            - vllm.entrypoints.openai.api_server
+          args:
+            - "--model"
+            - "/model-cache"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8000"
+            - "--api-key"
+            - "$(VLLM_API_KEY)"
+            - "--no-enable-log-requests"
+          env:
+            - name: VLLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vllm-secrets
+                  key: VLLM_API_KEY
+            - name: VLLM_CPU_KVCACHE_SPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: vllm-config
+                  key: VLLM_CPU_KVCACHE_SPACE
+            - name: VLLM_CPU_OMP_THREADS_BIND
+              valueFrom:
+                configMapKeyRef:
+                  name: vllm-config
+                  key: VLLM_CPU_OMP_THREADS_BIND
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: model-cache
+              mountPath: /model-cache
+            - name: dshm
+              mountPath: /dev/shm
+
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: vllm-model-cache
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi

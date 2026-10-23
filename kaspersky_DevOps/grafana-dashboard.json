@@ -1,0 +1,63 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Kaspersky DevOps Monitoring",
+    "tags": ["kaspersky", "devops"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "CPU Usage (containers)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\".*\"}[1m])) by (name)",
+            "legendFormat": "{{name}}"
+          }
+        ]
+      },
+      {
+        "title": "Memory Usage (containers)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes{name=~\".*\"}) by (name)",
+            "legendFormat": "{{name}}"
+          }
+        ]
+      },
+      {
+        "title": "MariaDB Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "mysql_up",
+            "legendFormat": "MariaDB UP"
+          }
+        ]
+      },
+      {
+        "title": "Uptime Kuma Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "up{job=\"uptime-kuma\"}",
+            "legendFormat": "Uptime Kuma"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true,
+  "inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "value": "Prometheus"
+    }
+  ]
+}

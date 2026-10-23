@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+# Создаем непривилегированного пользователя
+RUN useradd -m -s /bin/bash downloader
+
+# Устанавливаем только необходимые зависимости
+RUN pip install --no-cache-dir "huggingface_hub[cli]"
+
+# Копируем скрипт
+COPY scripts/download_model.sh /usr/local/bin/download_model.sh
+RUN chmod +x /usr/local/bin/download_model.sh
+
+# Переключаемся на непривилегированного пользователя
+USER downloader
+
+# Устанавливаем рабочую директорию
+WORKDIR /home/downloader
+
+ENTRYPOINT ["/usr/local/bin/download_model.sh"]
